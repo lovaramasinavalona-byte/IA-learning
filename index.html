@@ -24,47 +24,64 @@
                     <p class="text-[10px] text-blue-600 font-bold tracking-widest uppercase italic">By Peter</p>
                 </div>
             </div>
-            <span class="bg-green-100 text-green-700 px-2 py-1 rounded text-[10px] font-bold uppercase">V1.0 Stable</span>
+            <span class="bg-green-100 text-green-700 px-2 py-1 rounded text-[10px] font-bold uppercase">Direct Access</span>
         </header>
 
-        <div id="chatDisplay" class="chat-container overflow-y-auto mb-4 space-y-4 p-2"></div>
+        <div id="chatDisplay" class="chat-container overflow-y-auto mb-4 space-y-4 p-2">
+            <div class="flex justify-start">
+                <div class="ai-msg p-4 max-w-[85%] shadow-sm">
+                    <p class="text-sm">Hello Peter! I'm your English Coach. Let's practice! 🇬🇧</p>
+                </div>
+            </div>
+        </div>
 
         <div class="glass p-3 rounded-2xl shadow-lg border border-white flex items-center space-x-2">
-            <input type="text" id="userInput" class="flex-1 bg-transparent border-none focus:ring-0 text-sm p-2" placeholder="Type here..." onkeypress="if(event.key === 'Enter') sendMessage()">
-            <button onclick="sendMessage()" id="sendBtn" class="bg-blue-600 text-white w-10 h-10 rounded-xl hover:bg-blue-700 flex items-center justify-center">
+            <input type="text" id="userInput" class="flex-1 bg-transparent border-none focus:ring-0 text-sm p-2" placeholder="Tapez une phrase..." onkeypress="if(event.key === 'Enter') sendMessage()">
+            <button onclick="sendMessage()" id="sendBtn" class="bg-blue-600 text-white w-10 h-10 rounded-xl hover:bg-blue-700 flex items-center justify-center transition-all active:scale-90">
                 <i class="fas fa-paper-plane"></i>
             </button>
         </div>
     </div>
 
     <script type="module">
-        // Importation directe du SDK Google
         import { GoogleGenerativeAI } from "https://esm.run/@google/generative-ai";
 
-        // TA CLÉ (Copiée exactement de ton image d8d945)
+        // CONFIGURATION DE LA CLÉ
         const API_KEY = "AIzaSyA-voUowdU-LyVXQqt8IRCMiRTTLN0P9u4"; 
         
+        // Initialisation correcte pour éviter l'erreur 401
         const genAI = new GoogleGenerativeAI(API_KEY);
-        // Utilisation du modèle Flash qui est le plus rapide pour le Web
-        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+        const model = genAI.getGenerativeModel({ 
+            model: "gemini-1.5-flash"
+        });
 
         window.sendMessage = async function() {
             const input = document.getElementById('userInput');
+            const btn = document.getElementById('sendBtn');
             const message = input.value.trim();
             if (!message) return;
 
             appendMessage('user', message);
             input.value = '';
+            btn.disabled = true;
             const loadingId = appendMessage('ai', 'Thinking...');
 
             try {
-                // On force le format de réponse pour éviter les erreurs de lecture
-                const result = await model.generateContent(`Tu es le coach d'anglais de Peter. Réponds à : "${message}"`);
+                const prompt = `Tu es Peter's English Coach. 
+                1. Analyse la phrase : "${message}". 
+                2. Corrige les fautes d'anglais si besoin. 
+                3. Explique la règle en français simplement. 
+                4. Donne une alternative naturelle. 
+                5. Pose une question en anglais.`;
+
+                const result = await model.generateContent(prompt);
                 const response = await result.response;
                 updateMessage(loadingId, response.text());
             } catch (error) {
-                console.error("Détail de l'erreur:", error);
-                updateMessage(loadingId, "Désolé Peter, il y a un blocage de sécurité. Vérifie que tu n'as pas de bloqueur de pub (AdBlock) activé sur cette page.");
+                console.error("Erreur détectée :", error);
+                updateMessage(loadingId, "Erreur de connexion. Vérifie si GitHub n'a pas bloqué ta clé (Secret Scanning) !");
+            } finally {
+                btn.disabled = false;
             }
         }
 
@@ -73,7 +90,7 @@
             const id = Date.now();
             const div = document.createElement('div');
             div.className = `flex ${role === 'user' ? 'justify-end' : 'justify-start'}`;
-            div.innerHTML = `<div id="msg-${id}" class="${role === 'user' ? 'user-msg' : 'ai-msg'} p-3 max-w-[85%] shadow-sm text-sm">${text}</div>`;
+            div.innerHTML = `<div id="msg-${id}" class="${role === 'user' ? 'user-msg' : 'ai-msg'} p-3 max-w-[85%] shadow-sm text-sm whitespace-pre-line">${text}</div>`;
             chatDisplay.appendChild(div);
             chatDisplay.scrollTop = chatDisplay.scrollHeight;
             return id;
@@ -82,6 +99,7 @@
         function updateMessage(id, text) {
             const msg = document.getElementById(`msg-${id}`);
             if (msg) msg.innerText = text;
+            document.getElementById('chatDisplay').scrollTop = document.getElementById('chatDisplay').scrollHeight;
         }
     </script>
 </body>
