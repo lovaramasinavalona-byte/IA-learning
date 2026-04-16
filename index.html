@@ -11,7 +11,8 @@
         .glass { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); }
         .user-msg { background: #3b82f6; color: white; border-radius: 18px 18px 0 18px; margin-left: auto; }
         .ai-msg { background: #f3f4f6; color: #1f2937; border-radius: 18px 18px 18px 0; }
-        .error-msg { background: #fee2e2; color: #991b1b; border-radius: 10px; padding: 10px; font-size: 12px; }
+        .loading-dots::after { content: '...'; animation: dots 1.5s steps(5, end) infinite; }
+        @keyframes dots { 0%, 20% { content: '.'; } 40% { content: '..'; } 60% { content: '...'; } 80%, 100% { content: ''; } }
     </style>
 </head>
 <body class="bg-slate-100 font-sans">
@@ -25,20 +26,20 @@
                     <p class="text-[10px] text-blue-600 font-bold tracking-widest uppercase italic">By Peter</p>
                 </div>
             </div>
-            <span class="bg-green-100 text-green-700 px-2 py-1 rounded text-[10px] font-bold uppercase tracking-tighter">V1.0 Stable</span>
+            <span class="bg-green-100 text-green-700 px-2 py-1 rounded text-[10px] font-bold uppercase">Système Prêt</span>
         </header>
 
         <div id="chatDisplay" class="chat-container overflow-y-auto mb-4 space-y-4 p-2">
             <div class="flex justify-start">
                 <div class="ai-msg p-4 max-w-[85%] shadow-sm">
-                    <p class="text-sm">Hello Peter! I'm ready. Type something in English or French to start! 🇬🇧</p>
+                    <p class="text-sm">Hello Peter! I'm your coach. I've updated my connection. Let's try again! 🇬🇧</p>
                 </div>
             </div>
         </div>
 
         <div class="glass p-3 rounded-2xl shadow-lg border border-white flex items-center space-x-2">
-            <input type="text" id="userInput" class="flex-1 bg-transparent border-none focus:ring-0 text-sm p-2" placeholder="Ex: I wants to learning English..." onkeypress="if(event.key === 'Enter') sendMessage()">
-            <button onclick="sendMessage()" id="sendBtn" class="bg-blue-600 text-white w-10 h-10 rounded-xl hover:bg-blue-700 flex items-center justify-center shadow-md">
+            <input type="text" id="userInput" class="flex-1 bg-transparent border-none focus:ring-0 text-sm p-2" placeholder="Write something in English..." onkeypress="if(event.key === 'Enter') sendMessage()">
+            <button onclick="sendMessage()" id="sendBtn" class="bg-blue-600 text-white w-10 h-10 rounded-xl hover:bg-blue-700 flex items-center justify-center shadow-md active:scale-90 transition-all">
                 <i class="fas fa-paper-plane"></i>
             </button>
         </div>
@@ -57,30 +58,30 @@
             const input = document.getElementById('userInput');
             const btn = document.getElementById('sendBtn');
             const message = input.value.trim();
-            
             if (!message) return;
 
             appendMessage('user', message);
             input.value = '';
             btn.disabled = true;
-            const loadingId = appendMessage('ai', 'Thinking...');
+            const loadingId = appendMessage('ai', 'Thinking');
+            const msgElement = document.getElementById(`msg-${loadingId}`);
+            msgElement.classList.add('loading-dots');
 
             try {
-                const prompt = `Tu es Peter's English Coach. L'élève dit : "${message}". 
-                1. Traduis en anglais si c'est du français. 
-                2. Corrige les fautes d'anglais. 
-                3. Explique la règle de grammaire en français. 
-                4. Donne une phrase plus naturelle. 
-                5. Termine par une question en anglais.`;
+                const prompt = `Tu es Peter's English Coach. 
+                1. Corrige la phrase : "${message}".
+                2. Explique la faute en français simplement.
+                3. Donne une version naturelle.
+                4. Pose une question pour continuer.`;
 
                 const result = await model.generateContent(prompt);
                 const response = await result.response;
-                const text = response.text();
-                
-                updateMessage(loadingId, text);
+                msgElement.classList.remove('loading-dots');
+                updateMessage(loadingId, response.text());
             } catch (error) {
                 console.error(error);
-                updateMessage(loadingId, "Erreur : La clé API n'est pas encore activée par Google ou est restreinte. Vérifie tes 'API Restrictions' dans Google AI Studio.");
+                msgElement.classList.remove('loading-dots');
+                updateMessage(loadingId, "Connection error. Make sure your API key is correctly pasted in index.html at line 46.");
             } finally {
                 btn.disabled = false;
             }
