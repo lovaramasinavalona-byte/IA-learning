@@ -6,122 +6,83 @@
     <title>Peter's English Coach 🚀</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/font-awesome.min.css">
+    
     <style>
-        .chat-container { height: calc(100vh - 200px); }
+        .chat-container { height: calc(100vh - 250px); }
         .glass { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); }
-        .user-msg { background: #3b82f6; color: white; border-radius: 18px 18px 0 18px; }
+        .user-msg { background: #3b82f6; color: white; border-radius: 18px 18px 0 18px; margin-left: auto; }
         .ai-msg { background: #f3f4f6; color: #1f2937; border-radius: 18px 18px 18px 0; }
-        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
-        .listening { animation: pulse 1.5s infinite; color: #ef4444 !important; }
     </style>
 </head>
-<body class="bg-slate-100 font-sans leading-normal tracking-normal">
+<body class="bg-slate-100 font-sans">
 
-    <div class="max-w-4xl mx-auto p-4 md:p-6">
-        <!-- Header -->
-        <header class="flex justify-between items-center mb-6 glass p-4 rounded-2xl shadow-sm">
+    <div class="max-w-2xl mx-auto p-4 md:p-6">
+        <header class="flex justify-between items-center mb-6 glass p-4 rounded-2xl shadow-sm border border-white">
             <div class="flex items-center space-x-3">
-                <div class="bg-blue-600 p-2 rounded-lg text-white">
-                    <i class="fas fa-graduation-cap text-xl"></i>
-                </div>
+                <div class="bg-blue-600 p-2 rounded-lg text-white"><i class="fas fa-graduation-cap"></i></div>
                 <div>
-                    <h1 class="text-xl font-bold text-slate-800">Peter's English Coach</h1>
-                    <p class="text-xs text-slate-500 font-medium uppercase tracking-wider">Intelligence Artificielle Pédagogique</p>
+                    <h1 class="text-lg font-bold text-slate-800 leading-tight">English Coach</h1>
+                    <p class="text-[10px] text-blue-600 font-bold tracking-widest uppercase italic">By Peter</p>
                 </div>
             </div>
-            <div class="flex items-center space-x-4">
-                <div class="text-right">
-                    <p class="text-xs font-bold text-blue-600" id="currentLevel">NIVEAU B1</p>
-                    <p class="text-[10px] text-slate-400">Progression : 65%</p>
-                </div>
+            <div id="statusIndicator">
+                <span class="bg-green-100 text-green-700 px-2 py-1 rounded text-[10px] font-bold uppercase tracking-tighter">Direct Brain Access</span>
             </div>
         </header>
 
-        <!-- Chat Area -->
-        <div id="chatDisplay" class="chat-container overflow-y-auto mb-4 space-y-4 p-2 custom-scrollbar">
-            <!-- Message de bienvenue -->
+        <div id="chatDisplay" class="chat-container overflow-y-auto mb-4 space-y-4 p-2">
             <div class="flex justify-start">
-                <div class="ai-msg p-4 max-w-[80%] shadow-sm">
-                    <p class="text-sm">Hello Peter! I'm your English Coach. Ready to practice today? You can type your sentence or use the microphone. 🇬🇧</p>
+                <div class="ai-msg p-4 max-w-[85%] shadow-sm">
+                    <p class="text-sm">Hello Peter! I'm your English Coach. I'm connected directly to my AI brain. How can I help you today? 🇬🇧</p>
                 </div>
             </div>
         </div>
 
-        <!-- Input Area -->
-        <div class="glass p-4 rounded-2xl shadow-lg border border-white">
-            <div class="flex items-center space-x-2">
-                <button id="micBtn" onclick="toggleSpeech()" class="p-3 text-slate-400 hover:text-blue-600 transition-colors">
-                    <i class="fas fa-microphone text-xl"></i>
-                </button>
-                <input type="text" id="userInput" 
-                       class="flex-1 bg-transparent border-none focus:ring-0 text-slate-700 placeholder-slate-400 text-sm" 
-                       placeholder="Écrivez ou parlez en anglais..."
-                       onkeypress="handleKeyPress(event)">
-                <button onclick="sendMessage()" class="bg-blue-600 text-white p-3 rounded-xl hover:bg-blue-700 transition-all shadow-md">
-                    <i class="fas fa-paper-plane"></i>
-                </button>
-            </div>
+        <div class="glass p-3 rounded-2xl shadow-lg border border-white flex items-center space-x-2">
+            <input type="text" id="userInput" 
+                   class="flex-1 bg-transparent border-none focus:ring-0 text-sm p-2 text-slate-700" 
+                   placeholder="Tapez une phrase en anglais..."
+                   onkeypress="if(event.key === 'Enter') sendMessage()">
+            <button onclick="sendMessage()" 
+                    class="bg-blue-600 text-white w-10 h-10 rounded-xl hover:bg-blue-700 flex items-center justify-center transition-all shadow-md active:scale-95">
+                <i class="fas fa-paper-plane"></i>
+            </button>
         </div>
-        
-        <p class="text-center text-[10px] text-slate-400 mt-4 italic">Développé par Peter - Powered by Gemini AI</p>
+        <p class="text-[10px] text-center text-slate-400 mt-4 uppercase tracking-widest font-medium">Standalone Architecture v1.0</p>
     </div>
 
-    <script>
-        let isListening = false;
-        const recognition = 'webkitSpeechRecognition' in window ? new webkitSpeechRecognition() : null;
+    <script type="module">
+        import { GoogleGenerativeAI } from "https://esm.run/@google/generative-ai";
+
+        // IMPORTANT : METS TA CLÉ ICI
+        const API_KEY = "AQ.Ab8RN6IE8j-3v-zzJqht4iDthuknTrk8FRdZk-jVHYgCQYZ5vw"; 
         
-        if (recognition) {
-            recognition.lang = 'en-US';
-            recognition.continuous = false;
-            recognition.interimResults = false;
+        const genAI = new GoogleGenerativeAI(API_KEY);
+        const model = genAI.getGenerativeModel({ 
+            model: "gemini-1.5-flash",
+            generationConfig: { maxOutputTokens: 800, temperature: 0.7 }
+        });
 
-            recognition.onresult = (event) => {
-                const text = event.results[0][0].transcript;
-                document.getElementById('userInput').value = text;
-                sendMessage();
-            };
-
-            recognition.onend = () => {
-                isListening = false;
-                document.getElementById('micBtn').classList.remove('listening');
-            };
-        }
-
-        function toggleSpeech() {
-            if (!recognition) return alert("Votre navigateur ne supporte pas la reconnaissance vocale.");
-            if (isListening) {
-                recognition.stop();
-            } else {
-                recognition.start();
-                isListening = true;
-                document.getElementById('micBtn').classList.add('listening');
-            }
-        }
-
-        function handleKeyPress(e) {
-            if (e.key === 'Enter') sendMessage();
-        }
-
-        async function sendMessage() {
+        window.sendMessage = async function() {
             const input = document.getElementById('userInput');
             const message = input.value.trim();
             if (!message) return;
 
             appendMessage('user', message);
             input.value = '';
-
-            // Simulate AI Loading
-            const loadingId = appendMessage('ai', '...');
+            const loadingId = appendMessage('ai', 'Thinking...');
 
             try {
-                // Ici nous ferons le fetch vers ton futur backend Cloud (FastAPI)
-                // Pour l'instant, simulation de réponse locale
-                setTimeout(() => {
-                    updateMessage(loadingId, `Interesting! Your sentence is correct, but a native speaker might say: "Actually, I'd love to..." instead of "${message}".`);
-                }, 1000);
+                const prompt = `Tu es Peter's English Coach, un professeur d'anglais expert. 
+                Analyse : "${message}". 1. Traduis si besoin. 2. Corrige les fautes. 
+                3. Explique la règle simplement en français. 4. Donne une alternative naturelle. 
+                5. Pose une question en anglais.`;
                 
+                const result = await model.generateContent(prompt);
+                const response = await result.response;
+                updateMessage(loadingId, response.text());
             } catch (error) {
-                updateMessage(loadingId, "Désolé, j'ai eu un problème de connexion avec mon cerveau IA.");
+                updateMessage(loadingId, "Erreur de connexion. Vérifie ta clé API.");
             }
         }
 
@@ -130,11 +91,7 @@
             const id = Date.now();
             const div = document.createElement('div');
             div.className = `flex ${role === 'user' ? 'justify-end' : 'justify-start'}`;
-            div.innerHTML = `
-                <div id="msg-${id}" class="${role === 'user' ? 'user-msg' : 'ai-msg'} p-4 max-w-[80%] shadow-sm text-sm">
-                    ${text}
-                </div>
-            `;
+            div.innerHTML = `<div id="msg-${id}" class="${role === 'user' ? 'user-msg' : 'ai-msg'} p-3 max-w-[85%] shadow-sm text-sm whitespace-pre-line">${text}</div>`;
             chatDisplay.appendChild(div);
             chatDisplay.scrollTop = chatDisplay.scrollHeight;
             return id;
@@ -143,9 +100,9 @@
         function updateMessage(id, text) {
             const msg = document.getElementById(`msg-${id}`);
             if (msg) msg.innerText = text;
-            const chatDisplay = document.getElementById('chatDisplay');
-            chatDisplay.scrollTop = chatDisplay.scrollHeight;
+            document.getElementById('chatDisplay').scrollTop = document.getElementById('chatDisplay').scrollHeight;
         }
     </script>
 </body>
 </html>
+```
